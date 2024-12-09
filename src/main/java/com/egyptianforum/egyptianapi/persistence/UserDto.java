@@ -4,37 +4,44 @@ import jakarta.persistence.*;
 
 
 public class UserDto {
-    private String username;
+    private String login;
     private String password;
-    public boolean isAdmin;
+    private String role;
 
-    public UserDto(Integer userId, String username, boolean isAdmin) {
-        username = username;
-        userId = userId;
-        isAdmin = isAdmin;
+    public UserDto(String login, String password, String role) {
+        this.login = login;
+        this.password = password;
+        this.role = role;
     }
 
-    // Getters and Setters
-    public String getUsername() {
-        return username;
+    // Getter для login
+    public String getLogin() {
+        return login;
     }
 
-    public void setUsername(String username) {
-        this.username = username;
+    // Setter для login
+    public void setLogin(String login) {
+        this.login = login;
     }
 
+    // Getter для password
     public String getPassword() {
         return password;
     }
 
+    // Setter для password
     public void setPassword(String password) {
         this.password = password;
     }
-    public boolean getIsAdmin() {
-        return isAdmin;
+
+    // Getter для role
+    public String getRole() {
+        return role;
     }
 
-    public void setIsAdmin(boolean role) {
-        this.isAdmin = role;
+    // Setter для role
+    public void setRole(String role) {
+        this.role = role;
     }
+
 }

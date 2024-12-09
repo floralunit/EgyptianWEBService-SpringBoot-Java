@@ -9,6 +9,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/gods")
+@CrossOrigin(origins = "http://localhost:3000")
 public class GodController {
 
     private final GodService godService;

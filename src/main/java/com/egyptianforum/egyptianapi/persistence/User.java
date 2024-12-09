@@ -1,21 +1,27 @@
 package com.egyptianforum.egyptianapi.persistence;
 
 import jakarta.persistence.*;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.List;
+import java.util.Objects;
 
 @Entity
 @Table(name = "userinfo")
-public class User {
+public class User implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "userId")
     private Integer userId;
 
-    @Column(name = "username")
-    private String username;
+    @Column(name = "login")
+    private String login;
     @Column(name = "passwordHash")
     private String passwordHash;
     @Column(name = "refreshToken")
@@ -25,13 +31,52 @@ public class User {
     @Column(name = "tokenExpires")
     private LocalDateTime tokenExpires;
     @Column(name = "role")
-    public String role;
+    private String role;
 
-    // Конструкторы
+    public User(String login, String password, String role) {
+        this.login = login;
+        this.passwordHash = hashPassword(password);
+        this.role = role == null ? "USER" : role;
+    }
+
     public User() {
-        this.username = "";
-        this.passwordHash = "";
-        this.role = "";
+
+    }
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        if (Objects.equals(this.role, "ADMIN")) {
+            return List.of(new SimpleGrantedAuthority("ROLE_ADMIN"), new SimpleGrantedAuthority("ROLE_USER"));
+        }
+        return List.of(new SimpleGrantedAuthority("ROLE_USER"));
+    }
+
+    @Override
+    public String getUsername() {
+        return login;
+    }
+    public String getLogin() {
+        return login;
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return true;
     }
 
     public static String hashPassword(String password) {
@@ -57,15 +102,15 @@ public class User {
         this.userId = userId;
     }
 
-    public String getUsername() {
-        return username;
-    }
 
-    public void setUsername(String username) {
-        this.username = username;
+    public void setLogin(String username) {
+        this.login = username;
     }
 
     public String getPasswordHash() {
+        return passwordHash;
+    }
+    public String getPassword() {
         return passwordHash;
     }
 
@@ -97,10 +142,8 @@ public class User {
         this.tokenExpires = tokenExpires;
     }
 
-    public String getRole() {
-        return role;
-    }
 
+    public String getRole() { return role;}
     public void setRole(String role) {
         this.role = role;
     }

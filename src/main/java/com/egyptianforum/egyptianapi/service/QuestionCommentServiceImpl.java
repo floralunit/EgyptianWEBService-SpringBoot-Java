@@ -25,6 +25,7 @@ public class QuestionCommentServiceImpl implements QuestionCommentService {
 
     @Override
     public Question createQuestion(Question question) {
+        question.setDtCreated(LocalDateTime.now());
         return questionRepository.save(question);
     }
 

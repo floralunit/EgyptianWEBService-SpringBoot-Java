@@ -9,6 +9,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/categoriums")
+@CrossOrigin(origins = "http://localhost:3000")
 public class CategoriumController {
 
     private final CategoriumService categoriumService;

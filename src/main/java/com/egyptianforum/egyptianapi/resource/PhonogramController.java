@@ -9,6 +9,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/phonograms")
+@CrossOrigin(origins = "http://localhost:3000")
 public class PhonogramController {
 
     private final PhonogramService phonogramService;

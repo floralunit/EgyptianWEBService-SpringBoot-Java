@@ -2,6 +2,7 @@ package com.egyptianforum.egyptianapi.resource;
 
 import com.egyptianforum.egyptianapi.persistence.*;
 import com.egyptianforum.egyptianapi.service.QuestionCommentService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -10,6 +11,8 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api")
+@SecurityRequirement(name = "bearerAuth")
+@CrossOrigin(origins = "http://localhost:3000")
 public class QuestionCommentController {
 
     private final QuestionCommentService questionCommentService;
@@ -71,14 +74,14 @@ public class QuestionCommentController {
     }
 
     // Новый метод для удаления обсуждения
-    @DeleteMapping("/questions/delete/{id}")
+    @GetMapping("/questions/delete/{id}")
     public ResponseEntity<List<Question>> deleteQuestion(@PathVariable Integer id) {
         questionCommentService.deleteQuestion(id);
         List<Question> questions = questionCommentService.getAllQuestions();
         return ResponseEntity.ok(questions);
     }
 
-    @DeleteMapping("/comments/delete/{id}")
+    @GetMapping("/comments/delete/{id}")
     public ResponseEntity<List<Comment>> deleteComment(@PathVariable Integer id) {
         questionCommentService.deleteComment(id);
         List<Comment> comments = questionCommentService.getCommentsByQuestionId(id);

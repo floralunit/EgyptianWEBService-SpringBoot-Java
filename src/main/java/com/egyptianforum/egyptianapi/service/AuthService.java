@@ -1,18 +1,15 @@
 package com.egyptianforum.egyptianapi.service;
 
 import com.egyptianforum.egyptianapi.persistence.*;
-import com.egyptianforum.egyptianapi.security.JwtUtil;
+import com.egyptianforum.egyptianapi.security.TokenProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
 import java.security.SecureRandom;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Base64;
-import java.util.List;
 
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -28,55 +25,27 @@ public class AuthService {
     private UserRepository userRepository;
 
     public User registerUser(UserDto request) throws Exception {
-        byte[] passwordSalt = new byte[16];
-        new SecureRandom().nextBytes(passwordSalt);
-
-        User user = new User();
-        user.setUsername(request.getUsername());
-        user.setPasswordHash(request.getPassword());
-
+        User user = new User(request.getLogin(), request.getPassword(), request.getRole());
         return userRepository.save(user);
     }
 
-    public User findByUsername(String username) {
-        List<User> foundUsers = userRepository.findByUsername(username);
-        return foundUsers.isEmpty() ? null : foundUsers.get(0);
-    }
-
-
-    public byte[] createPasswordHash(String password, byte[] passwordSalt) throws Exception {
-        // Создаем HMAC с использованием SHA-512
-        Mac mac = Mac.getInstance("HmacSHA512");
-        SecretKeySpec secretKeySpec = new SecretKeySpec(passwordSalt, "HmacSHA512");
-        mac.init(secretKeySpec);
-
-        // Вычисляем хеш пароля
-        return mac.doFinal(password.getBytes("UTF-8"));
-    }
-
-
-    private JwtUtil jwtUtil = new JwtUtil();
-
-    //private HttpServletResponse response;
-
+    private TokenProvider tokenProvider = new TokenProvider();
 
     public AuthResponseDto login(UserDto request) {
-
-        User user = findByUsername(request.getUsername());
+        User user = userRepository.findByLogin(request.getLogin());
         if (user == null) {
             return new AuthResponseDto("Пользователь не найден!", false);
         }
-
         if (!user.getPasswordHash().equals(User.hashPassword(request.getPassword()))) {
             return new AuthResponseDto("Неправильно введен пароль!", false);
         }
 
-        String token = jwtUtil.createToken(user);
+        String token = tokenProvider.generateAccessToken(user);
         RefreshToken refreshToken = createRefreshToken();
         setRefreshToken(refreshToken, user);
 
-        return new AuthResponseDto(true, token, user.getUserId(), user.getUsername(),
-                user.getRefreshToken(), user.getTokenExpires(), user.getRole(),
+        return new AuthResponseDto(true, token, user.getUserId(), user.getLogin(),
+                refreshToken.getToken(), user.getTokenExpires(), user.getRole(),
                 "Успешная авторизация!");
     }
 
@@ -96,7 +65,6 @@ public class AuthService {
             response.addCookie(new Cookie("refreshToken", refreshToken.getToken()));
         }
         user.setRefreshToken(refreshToken.getToken());
-        System.out.println("токен: " + refreshToken.getToken());
         user.setTokenCreatedDt(refreshToken.getCreatedAt());
         user.setTokenExpires(refreshToken.getExpiresAt());
 
@@ -113,7 +81,7 @@ public class AuthService {
             return new AuthResponseDto("Token expired.", false);
         }
 
-        String token = jwtUtil.createToken(user);
+        String token = tokenProvider.generateAccessToken(user);
         RefreshToken newRefreshToken = createRefreshToken();
         setRefreshToken(newRefreshToken, user);
 
@@ -138,5 +106,9 @@ public class AuthService {
 
         // Если cookie с таким именем не найден, возвращаем null
         return null; // или return ""; в зависимости от ваших требований
+    }
+
+    public User findByUsername(String username) {
+        return userRepository.findByLogin(username);
     }
 }
